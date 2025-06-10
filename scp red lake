@@ -18,7 +18,7 @@ g.IgnoreGuiInset = true
 
 local f = Instance.new("Frame", g)
 f.Size = UDim2.new(0, 320, 0, 250)
-f.Position = UDim2.new(0.5, -160, 0.3, 0)
+f.Position = UDim2.new(0.5, -160, 0.5, -125)
 f.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 f.BorderSizePixel = 0
 f.Active = true
