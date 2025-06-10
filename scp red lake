@@ -17,32 +17,98 @@ g.ResetOnSpawn = false
 g.IgnoreGuiInset = true
 
 local f = Instance.new("Frame", g)
-f.Size = UDim2.new(0, 300, 0, 30)
-f.Position = UDim2.new(0.5, -150, 0.25, 0)
-f.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+f.Size = UDim2.new(0, 320, 0, 250)
+f.Position = UDim2.new(0.5, -160, 0.3, 0)
+f.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 f.BorderSizePixel = 0
+f.Active = true
+
+Instance.new("UICorner", f).CornerRadius = UDim.new(0, 6)
+
+local outline = Instance.new("UIStroke", f)
+outline.Thickness = 2
+outline.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+outline.LineJoinMode = Enum.LineJoinMode.Round
+
+task.spawn(function()
+	local h = 0
+	while true do
+		h = (h + 1) % 360
+		outline.Color = Color3.fromHSV(h / 360, 1, 1)
+		task.wait(0.03)
+	end
+end)
+
+local top = Instance.new("TextButton", f)
+top.Size = UDim2.new(1, 0, 0, 30)
+top.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+top.Text = "Tower Spawner"
+top.Font = Enum.Font.GothamBold
+top.TextColor3 = Color3.new(1, 1, 1)
+top.TextSize = 14
+top.BorderSizePixel = 0
+top.AutoButtonColor = false
+top.Active = true
+
+Instance.new("UICorner", top).CornerRadius = UDim.new(0, 6)
+
+local dragging = false
+local offset
+local inputConnection
+
+top.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		dragging = true
+		offset = Vector2.new(input.Position.X, input.Position.Y) - Vector2.new(f.Position.X.Offset, f.Position.Y.Offset)
+		if inputConnection then inputConnection:Disconnect() end
+		inputConnection = game:GetService("UserInputService").InputChanged:Connect(function(moveInput)
+			if dragging and (moveInput.UserInputType == Enum.UserInputType.MouseMovement or moveInput.UserInputType == Enum.UserInputType.Touch) then
+				local pos = Vector2.new(moveInput.Position.X, moveInput.Position.Y) - offset
+				f.Position = UDim2.new(0, pos.X, 0, pos.Y)
+			end
+		end)
+	end
+end)
+
+top.InputEnded:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		dragging = false
+		if inputConnection then inputConnection:Disconnect() end
+	end
+end)
 
 local b = Instance.new("TextButton", f)
-b.Size = UDim2.new(0.7, 0, 1, 0)
+b.Size = UDim2.new(0.7, 0, 0, 30)
+b.Position = UDim2.new(0.05, 0, 0, 40)
 b.Text = "Select Tower"
 b.TextColor3 = Color3.new(1, 1, 1)
 b.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+b.Font = Enum.Font.Gotham
+b.TextSize = 13
 b.BorderSizePixel = 0
 
+Instance.new("UICorner", b).CornerRadius = UDim.new(0, 5)
+
 local sb = Instance.new("TextButton", f)
-sb.Size = UDim2.new(0.3, 0, 1, 0)
-sb.Position = UDim2.new(0.7, 0, 0, 0)
+sb.Size = UDim2.new(0.2, 0, 0, 30)
+sb.Position = UDim2.new(0.75, 0, 0, 40)
 sb.Text = "Spawn"
 sb.TextColor3 = Color3.new(1, 1, 1)
 sb.BackgroundColor3 = Color3.fromRGB(80, 120, 80)
+sb.Font = Enum.Font.Gotham
+sb.TextSize = 13
 sb.BorderSizePixel = 0
 
+Instance.new("UICorner", sb).CornerRadius = UDim.new(0, 5)
+
 local d = Instance.new("Frame", f)
-d.Size = UDim2.new(1, 0, 0, 180)
-d.Position = UDim2.new(0, 0, 1, 0)
+d.Size = UDim2.new(1, -20, 0, 150)
+d.Position = UDim2.new(0, 10, 0, 80)
 d.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 d.Visible = false
 d.BorderSizePixel = 0
+
+Instance.new("UICorner", d).CornerRadius = UDim.new(0, 5)
 
 local sbox = Instance.new("TextBox", d)
 sbox.Size = UDim2.new(1, -10, 0, 25)
@@ -53,6 +119,8 @@ sbox.TextColor3 = Color3.new(1, 1, 1)
 sbox.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
 sbox.BorderSizePixel = 0
 
+Instance.new("UICorner", sbox).CornerRadius = UDim.new(0, 5)
+
 local drop = Instance.new("ScrollingFrame", d)
 drop.Position = UDim2.new(0, 5, 0, 35)
 drop.Size = UDim2.new(1, -10, 1, -40)
@@ -61,6 +129,8 @@ drop.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 drop.ScrollBarThickness = 6
 drop.BorderSizePixel = 0
 drop.ClipsDescendants = true
+
+Instance.new("UICorner", drop).CornerRadius = UDim.new(0, 5)
 
 local layout = Instance.new("UIListLayout", drop)
 layout.SortOrder = Enum.SortOrder.LayoutOrder
@@ -83,6 +153,8 @@ local function refresh(txt)
 			e.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
 			e.BorderSizePixel = 0
 
+			Instance.new("UICorner", e).CornerRadius = UDim.new(0, 4)
+
 			local nb = Instance.new("TextButton", e)
 			nb.Size = UDim2.new(0.7, 0, 1, 0)
 			nb.Position = UDim2.new(0, 0, 0, 0)
@@ -90,6 +162,8 @@ local function refresh(txt)
 			nb.TextColor3 = Color3.new(1, 1, 1)
 			nb.BackgroundTransparency = 1
 			nb.TextXAlignment = Enum.TextXAlignment.Left
+			nb.Font = Enum.Font.Gotham
+			nb.TextSize = 12
 
 			local pr = Instance.new("TextLabel", e)
 			pr.Size = UDim2.new(0.3, -5, 1, 0)
@@ -97,8 +171,8 @@ local function refresh(txt)
 			pr.BackgroundTransparency = 1
 			pr.TextColor3 = Color3.fromRGB(200, 255, 200)
 			pr.TextXAlignment = Enum.TextXAlignment.Right
-			pr.Font = Enum.Font.SourceSans
-			pr.TextScaled = true
+			pr.Font = Enum.Font.Gotham
+			pr.TextSize = 12
 
 			local price = "???"
 			pcall(function()
@@ -137,6 +211,6 @@ sb.MouseButton1Click:Connect(function()
 			s:InvokeServer(unpack(args))
 		end
 	else
-		b.Text = ":exclamation: Select a tower first"
+		b.Text = "❗ Select a tower first"
 	end
 end)
