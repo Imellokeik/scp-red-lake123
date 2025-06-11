@@ -1,155 +1,116 @@
-local plr = game.Players.LocalPlayer
-local rs = game:GetService("ReplicatedStorage")
-local towersFolder = rs:WaitForChild("Towers")
-local spawnFunc = rs:WaitForChild("Functions"):WaitForChild("SpawnTower")
-
--- GUI setup
-local gui = Instance.new("ScreenGui", plr:WaitForChild("PlayerGui"))
-gui.Name = "TowerSpawnGUI"
-gui.ResetOnSpawn = false
-gui.IgnoreGuiInset = true
-
--- Main frame
-local frame = Instance.new("Frame", gui)
-frame.Size = UDim2.new(0, 300, 0, 30)
-frame.Position = UDim2.new(0.5, -150, 0.25, 0)
-frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-frame.BorderSizePixel = 0
-
--- Tower select button
-local selectButton = Instance.new("TextButton", frame)
-selectButton.Size = UDim2.new(0.7, 0, 1, 0)
-selectButton.Text = "Select Tower"
-selectButton.TextColor3 = Color3.new(1, 1, 1)
-selectButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-selectButton.BorderSizePixel = 0
-
--- Spawn button
-local spawnButton = Instance.new("TextButton", frame)
-spawnButton.Size = UDim2.new(0.3, 0, 1, 0)
-spawnButton.Position = UDim2.new(0.7, 0, 0, 0)
-spawnButton.Text = "Spawn"
-spawnButton.TextColor3 = Color3.new(1, 1, 1)
-spawnButton.BackgroundColor3 = Color3.fromRGB(80, 120, 80)
-spawnButton.BorderSizePixel = 0
-
--- Dropdown container
-local dropdownFrame = Instance.new("Frame", frame)
-dropdownFrame.Size = UDim2.new(1, 0, 0, 180)
-dropdownFrame.Position = UDim2.new(0, 0, 1, 0)
-dropdownFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-dropdownFrame.Visible = false
-dropdownFrame.BorderSizePixel = 0
-
--- Search bar
-local searchBox = Instance.new("TextBox", dropdownFrame)
-searchBox.Size = UDim2.new(1, -10, 0, 25)
-searchBox.Position = UDim2.new(0, 5, 0, 5)
-searchBox.PlaceholderText = "Search Tower..."
-searchBox.Text = ""
-searchBox.TextColor3 = Color3.new(1, 1, 1)
-searchBox.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-searchBox.BorderSizePixel = 0
-
--- Scrolling list
-local dropdown = Instance.new("ScrollingFrame", dropdownFrame)
-dropdown.Position = UDim2.new(0, 5, 0, 35)
-dropdown.Size = UDim2.new(1, -10, 1, -40)
-dropdown.CanvasSize = UDim2.new(0, 0, 0, 0)
-dropdown.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-dropdown.ScrollBarThickness = 6
-dropdown.BorderSizePixel = 0
-dropdown.ClipsDescendants = true
-
-local layout = Instance.new("UIListLayout", dropdown)
-layout.SortOrder = Enum.SortOrder.LayoutOrder
-layout.Padding = UDim.new(0, 2)
-
--- Track selected tower
-local selectedTower = nil
-
--- Render tower buttons
-local function refreshDropdown(filterText)
-	for _, child in ipairs(dropdown:GetChildren()) do
-		if child:IsA("Frame") then
-			child:Destroy()
+local p=game.Players.LocalPlayer
+local rs=game:GetService("ReplicatedStorage")
+local t=rs:WaitForChild("Towers")
+local f=rs:WaitForChild("Functions"):WaitForChild("SpawnTower")
+local g=Instance.new("ScreenGui",p:WaitForChild("PlayerGui"))
+g.Name="TowerSpawnGUI"
+g.ResetOnSpawn=false
+g.IgnoreGuiInset=true
+local fr=Instance.new("Frame",g)
+fr.Size=UDim2.new(0,300,0,30)
+fr.Position=UDim2.new(0.5,-150,0.25,0)
+fr.BackgroundColor3=Color3.fromRGB(30,30,30)
+fr.BorderSizePixel=0
+local sb=Instance.new("TextButton",fr)
+sb.Size=UDim2.new(0.7,0,1,0)
+sb.Text="Select Tower"
+sb.TextColor3=Color3.new(1,1,1)
+sb.BackgroundColor3=Color3.fromRGB(60,60,60)
+sb.BorderSizePixel=0
+local spb=Instance.new("TextButton",fr)
+spb.Size=UDim2.new(0.3,0,1,0)
+spb.Position=UDim2.new(0.7,0,0,0)
+spb.Text="Spawn"
+spb.TextColor3=Color3.new(1,1,1)
+spb.BackgroundColor3=Color3.fromRGB(80,120,80)
+spb.BorderSizePixel=0
+local dd=Instance.new("Frame",fr)
+dd.Size=UDim2.new(1,0,0,180)
+dd.Position=UDim2.new(0,0,1,0)
+dd.BackgroundColor3=Color3.fromRGB(40,40,40)
+dd.Visible=false
+dd.BorderSizePixel=0
+local sbx=Instance.new("TextBox",dd)
+sbx.Size=UDim2.new(1,-10,0,25)
+sbx.Position=UDim2.new(0,5,0,5)
+sbx.PlaceholderText="Search Tower..."
+sbx.Text=""
+sbx.TextColor3=Color3.new(1,1,1)
+sbx.BackgroundColor3=Color3.fromRGB(60,60,60)
+sbx.BorderSizePixel=0
+local dr=Instance.new("ScrollingFrame",dd)
+dr.Position=UDim2.new(0,5,0,35)
+dr.Size=UDim2.new(1,-10,1,-40)
+dr.CanvasSize=UDim2.new(0,0,0,0)
+dr.BackgroundColor3=Color3.fromRGB(50,50,50)
+dr.ScrollBarThickness=6
+dr.BorderSizePixel=0
+dr.ClipsDescendants=true
+local l=Instance.new("UIListLayout",dr)
+l.SortOrder=Enum.SortOrder.LayoutOrder
+l.Padding=UDim.new(0,2)
+local st=nil
+local function rdd(ft)
+	for _,c in ipairs(dr:GetChildren()) do
+		if c:IsA("Frame") then
+			c:Destroy()
 		end
 	end
-
-	local count = 0
-	for _, tower in ipairs(towersFolder:GetChildren()) do
-		if not filterText or tower.Name:lower():find(filterText:lower()) then
-			count += 1
-
-			-- Create entry frame
-			local entry = Instance.new("Frame", dropdown)
-			entry.Size = UDim2.new(1, -4, 0, 25)
-			entry.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
-			entry.BorderSizePixel = 0
-
-			-- Name label
-			local nameBtn = Instance.new("TextButton", entry)
-			nameBtn.Size = UDim2.new(0.7, 0, 1, 0)
-			nameBtn.Position = UDim2.new(0, 0, 0, 0)
-			nameBtn.Text = tower.Name
-			nameBtn.TextColor3 = Color3.new(1, 1, 1)
-			nameBtn.BackgroundTransparency = 1
-			nameBtn.TextXAlignment = Enum.TextXAlignment.Left
-
-			-- Price label
-			local priceLabel = Instance.new("TextLabel", entry)
-			priceLabel.Size = UDim2.new(0.3, -5, 1, 0)
-			priceLabel.Position = UDim2.new(0.7, 0, 0, 0)
-			priceLabel.BackgroundTransparency = 1
-			priceLabel.TextColor3 = Color3.fromRGB(200, 255, 200)
-			priceLabel.TextXAlignment = Enum.TextXAlignment.Right
-			priceLabel.Font = Enum.Font.SourceSans
-			priceLabel.TextScaled = true
-
-			local price = "???"
+	local ct=0
+	for _,tw in ipairs(t:GetChildren()) do
+		if not ft or tw.Name:lower():find(ft:lower()) then
+			ct+=1
+			local e=Instance.new("Frame",dr)
+			e.Size=UDim2.new(1,-4,0,25)
+			e.BackgroundColor3=Color3.fromRGB(70,70,70)
+			e.BorderSizePixel=0
+			local nb=Instance.new("TextButton",e)
+			nb.Size=UDim2.new(0.7,0,1,0)
+			nb.Position=UDim2.new(0,0,0,0)
+			nb.Text=tw.Name
+			nb.TextColor3=Color3.new(1,1,1)
+			nb.BackgroundTransparency=1
+			nb.TextXAlignment=Enum.TextXAlignment.Left
+			local pl=Instance.new("TextLabel",e)
+			pl.Size=UDim2.new(0.3,-5,1,0)
+			pl.Position=UDim2.new(0.7,0,0,0)
+			pl.BackgroundTransparency=1
+			pl.TextColor3=Color3.fromRGB(200,255,200)
+			pl.TextXAlignment=Enum.TextXAlignment.Right
+			pl.Font=Enum.Font.SourceSans
+			pl.TextScaled=true
+			local pr="???"
 			pcall(function()
-				price = tostring(towersFolder[tower.Name].Config.Price.Value)
+				pr=t[tw.Name].Config.Price.Value
 			end)
-
-			priceLabel.Text = "$" .. price
-
-			nameBtn.MouseButton1Click:Connect(function()
-				selectedTower = tower.Name
-				selectButton.Text = "Selected: " .. tower.Name
-				dropdownFrame.Visible = false
+			pl.Text="$"..pr
+			nb.MouseButton1Click:Connect(function()
+				st=tw.Name
+				sb.Text="Selected: "..tw.Name
+				dd.Visible=false
 			end)
 		end
 	end
-
-	dropdown.CanvasSize = UDim2.new(0, 0, 0, 27 * count)
+	dr.CanvasSize=UDim2.new(0,0,0,27*ct)
 end
-
--- Search bar update
-searchBox:GetPropertyChangedSignal("Text"):Connect(function()
-	refreshDropdown(searchBox.Text)
+sbx:GetPropertyChangedSignal("Text"):Connect(function()
+	rdd(sbx.Text)
 end)
-
--- Toggle dropdown
-selectButton.MouseButton1Click:Connect(function()
-	dropdownFrame.Visible = not dropdownFrame.Visible
-	if dropdownFrame.Visible then
-		searchBox.Text = ""
-		refreshDropdown("")
+sb.MouseButton1Click:Connect(function()
+	dd.Visible=not dd.Visible
+	if dd.Visible then
+		sbx.Text=""
+		rdd("")
 	end
 end)
-
--- Spawn tower
-spawnButton.MouseButton1Click:Connect(function()
-	if selectedTower then
-		local char = plr.Character
-		if char and char:FindFirstChild("Left Leg") then
-			local args = {
-				selectedTower,
-				CFrame.new(char.Left Leg.Position)
-			}
-			spawnFunc:InvokeServer(unpack(args))
+spb.MouseButton1Click:Connect(function()
+	if st then
+		local c=p.Character
+		if c and c:FindFirstChild("Right Leg") then
+			local a={st,CFrame.new(c["Right Leg"].Position)}
+			f:InvokeServer(unpack(a))
 		end
 	else
-		selectButton.Text = "❗ Select a tower first"
+		sb.Text="❗ Select a tower first"
 	end
 end)
