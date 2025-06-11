@@ -1,216 +1,155 @@
-local p = game.Players.LocalPlayer
+local plr = game.Players.LocalPlayer
 local rs = game:GetService("ReplicatedStorage")
-local t = rs:WaitForChild("Towers")
-local s = rs:WaitForChild("Functions"):WaitForChild("SpawnTower")
-local area = workspace.Map.SB_Oasis.TowerArea
-local pts = {}
+local towersFolder = rs:WaitForChild("Towers")
+local spawnFunc = rs:WaitForChild("Functions"):WaitForChild("SpawnTower")
 
-for _, v in ipairs(area:GetChildren()) do
-	if v:IsA("BasePart") and v.Name == "1" then
-		table.insert(pts, v)
-	end
-end
+-- GUI setup
+local gui = Instance.new("ScreenGui", plr:WaitForChild("PlayerGui"))
+gui.Name = "TowerSpawnGUI"
+gui.ResetOnSpawn = false
+gui.IgnoreGuiInset = true
 
-local g = Instance.new("ScreenGui", p:WaitForChild("PlayerGui"))
-g.Name = "TowerSpawnGUI"
-g.ResetOnSpawn = false
-g.IgnoreGuiInset = true
+-- Main frame
+local frame = Instance.new("Frame", gui)
+frame.Size = UDim2.new(0, 300, 0, 30)
+frame.Position = UDim2.new(0.5, -150, 0.25, 0)
+frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+frame.BorderSizePixel = 0
 
-local f = Instance.new("Frame", g)
-f.Size = UDim2.new(0, 320, 0, 250)
-f.Position = UDim2.new(0.5, -160, 0.3, 0)
-f.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-f.BorderSizePixel = 0
-f.Active = true
+-- Tower select button
+local selectButton = Instance.new("TextButton", frame)
+selectButton.Size = UDim2.new(0.7, 0, 1, 0)
+selectButton.Text = "Select Tower"
+selectButton.TextColor3 = Color3.new(1, 1, 1)
+selectButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+selectButton.BorderSizePixel = 0
 
-Instance.new("UICorner", f).CornerRadius = UDim.new(0, 6)
+-- Spawn button
+local spawnButton = Instance.new("TextButton", frame)
+spawnButton.Size = UDim2.new(0.3, 0, 1, 0)
+spawnButton.Position = UDim2.new(0.7, 0, 0, 0)
+spawnButton.Text = "Spawn"
+spawnButton.TextColor3 = Color3.new(1, 1, 1)
+spawnButton.BackgroundColor3 = Color3.fromRGB(80, 120, 80)
+spawnButton.BorderSizePixel = 0
 
-local outline = Instance.new("UIStroke", f)
-outline.Thickness = 2
-outline.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-outline.LineJoinMode = Enum.LineJoinMode.Round
+-- Dropdown container
+local dropdownFrame = Instance.new("Frame", frame)
+dropdownFrame.Size = UDim2.new(1, 0, 0, 180)
+dropdownFrame.Position = UDim2.new(0, 0, 1, 0)
+dropdownFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+dropdownFrame.Visible = false
+dropdownFrame.BorderSizePixel = 0
 
-task.spawn(function()
-	local h = 0
-	while true do
-		h = (h + 1) % 360
-		outline.Color = Color3.fromHSV(h / 360, 1, 1)
-		task.wait(0.03)
-	end
-end)
+-- Search bar
+local searchBox = Instance.new("TextBox", dropdownFrame)
+searchBox.Size = UDim2.new(1, -10, 0, 25)
+searchBox.Position = UDim2.new(0, 5, 0, 5)
+searchBox.PlaceholderText = "Search Tower..."
+searchBox.Text = ""
+searchBox.TextColor3 = Color3.new(1, 1, 1)
+searchBox.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+searchBox.BorderSizePixel = 0
 
-local top = Instance.new("TextButton", f)
-top.Size = UDim2.new(1, 0, 0, 30)
-top.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-top.Text = "Tower Spawner"
-top.Font = Enum.Font.GothamBold
-top.TextColor3 = Color3.new(1, 1, 1)
-top.TextSize = 14
-top.BorderSizePixel = 0
-top.AutoButtonColor = false
-top.Active = true
+-- Scrolling list
+local dropdown = Instance.new("ScrollingFrame", dropdownFrame)
+dropdown.Position = UDim2.new(0, 5, 0, 35)
+dropdown.Size = UDim2.new(1, -10, 1, -40)
+dropdown.CanvasSize = UDim2.new(0, 0, 0, 0)
+dropdown.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+dropdown.ScrollBarThickness = 6
+dropdown.BorderSizePixel = 0
+dropdown.ClipsDescendants = true
 
-Instance.new("UICorner", top).CornerRadius = UDim.new(0, 6)
-
-local dragging = false
-local offset
-local inputConnection
-
-top.InputBegan:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-		dragging = true
-		offset = Vector2.new(input.Position.X, input.Position.Y) - Vector2.new(f.Position.X.Offset, f.Position.Y.Offset)
-		if inputConnection then inputConnection:Disconnect() end
-		inputConnection = game:GetService("UserInputService").InputChanged:Connect(function(moveInput)
-			if dragging and (moveInput.UserInputType == Enum.UserInputType.MouseMovement or moveInput.UserInputType == Enum.UserInputType.Touch) then
-				local pos = Vector2.new(moveInput.Position.X, moveInput.Position.Y) - offset
-				f.Position = UDim2.new(0, pos.X, 0, pos.Y)
-			end
-		end)
-	end
-end)
-
-top.InputEnded:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-		dragging = false
-		if inputConnection then inputConnection:Disconnect() end
-	end
-end)
-
-local b = Instance.new("TextButton", f)
-b.Size = UDim2.new(0.7, 0, 0, 30)
-b.Position = UDim2.new(0.05, 0, 0, 40)
-b.Text = "Select Tower"
-b.TextColor3 = Color3.new(1, 1, 1)
-b.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-b.Font = Enum.Font.Gotham
-b.TextSize = 13
-b.BorderSizePixel = 0
-
-Instance.new("UICorner", b).CornerRadius = UDim.new(0, 5)
-
-local sb = Instance.new("TextButton", f)
-sb.Size = UDim2.new(0.2, 0, 0, 30)
-sb.Position = UDim2.new(0.75, 0, 0, 40)
-sb.Text = "Spawn"
-sb.TextColor3 = Color3.new(1, 1, 1)
-sb.BackgroundColor3 = Color3.fromRGB(80, 120, 80)
-sb.Font = Enum.Font.Gotham
-sb.TextSize = 13
-sb.BorderSizePixel = 0
-
-Instance.new("UICorner", sb).CornerRadius = UDim.new(0, 5)
-
-local d = Instance.new("Frame", f)
-d.Size = UDim2.new(1, -20, 0, 150)
-d.Position = UDim2.new(0, 10, 0, 80)
-d.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-d.Visible = false
-d.BorderSizePixel = 0
-
-Instance.new("UICorner", d).CornerRadius = UDim.new(0, 5)
-
-local sbox = Instance.new("TextBox", d)
-sbox.Size = UDim2.new(1, -10, 0, 25)
-sbox.Position = UDim2.new(0, 5, 0, 5)
-sbox.PlaceholderText = "Search Tower..."
-sbox.Text = ""
-sbox.TextColor3 = Color3.new(1, 1, 1)
-sbox.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-sbox.BorderSizePixel = 0
-
-Instance.new("UICorner", sbox).CornerRadius = UDim.new(0, 5)
-
-local drop = Instance.new("ScrollingFrame", d)
-drop.Position = UDim2.new(0, 5, 0, 35)
-drop.Size = UDim2.new(1, -10, 1, -40)
-drop.CanvasSize = UDim2.new(0, 0, 0, 0)
-drop.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-drop.ScrollBarThickness = 6
-drop.BorderSizePixel = 0
-drop.ClipsDescendants = true
-
-Instance.new("UICorner", drop).CornerRadius = UDim.new(0, 5)
-
-local layout = Instance.new("UIListLayout", drop)
+local layout = Instance.new("UIListLayout", dropdown)
 layout.SortOrder = Enum.SortOrder.LayoutOrder
 layout.Padding = UDim.new(0, 2)
 
-local sel = nil
+-- Track selected tower
+local selectedTower = nil
 
-local function refresh(txt)
-	for _, c in ipairs(drop:GetChildren()) do
-		if c:IsA("Frame") then
-			c:Destroy()
+-- Render tower buttons
+local function refreshDropdown(filterText)
+	for _, child in ipairs(dropdown:GetChildren()) do
+		if child:IsA("Frame") then
+			child:Destroy()
 		end
 	end
-	local ct = 0
-	for _, v in ipairs(t:GetChildren()) do
-		if not txt or v.Name:lower():find(txt:lower()) then
-			ct += 1
-			local e = Instance.new("Frame", drop)
-			e.Size = UDim2.new(1, -4, 0, 25)
-			e.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
-			e.BorderSizePixel = 0
 
-			Instance.new("UICorner", e).CornerRadius = UDim.new(0, 4)
+	local count = 0
+	for _, tower in ipairs(towersFolder:GetChildren()) do
+		if not filterText or tower.Name:lower():find(filterText:lower()) then
+			count += 1
 
-			local nb = Instance.new("TextButton", e)
-			nb.Size = UDim2.new(0.7, 0, 1, 0)
-			nb.Position = UDim2.new(0, 0, 0, 0)
-			nb.Text = v.Name
-			nb.TextColor3 = Color3.new(1, 1, 1)
-			nb.BackgroundTransparency = 1
-			nb.TextXAlignment = Enum.TextXAlignment.Left
-			nb.Font = Enum.Font.Gotham
-			nb.TextSize = 12
+			-- Create entry frame
+			local entry = Instance.new("Frame", dropdown)
+			entry.Size = UDim2.new(1, -4, 0, 25)
+			entry.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+			entry.BorderSizePixel = 0
 
-			local pr = Instance.new("TextLabel", e)
-			pr.Size = UDim2.new(0.3, -5, 1, 0)
-			pr.Position = UDim2.new(0.7, 0, 0, 0)
-			pr.BackgroundTransparency = 1
-			pr.TextColor3 = Color3.fromRGB(200, 255, 200)
-			pr.TextXAlignment = Enum.TextXAlignment.Right
-			pr.Font = Enum.Font.Gotham
-			pr.TextSize = 12
+			-- Name label
+			local nameBtn = Instance.new("TextButton", entry)
+			nameBtn.Size = UDim2.new(0.7, 0, 1, 0)
+			nameBtn.Position = UDim2.new(0, 0, 0, 0)
+			nameBtn.Text = tower.Name
+			nameBtn.TextColor3 = Color3.new(1, 1, 1)
+			nameBtn.BackgroundTransparency = 1
+			nameBtn.TextXAlignment = Enum.TextXAlignment.Left
+
+			-- Price label
+			local priceLabel = Instance.new("TextLabel", entry)
+			priceLabel.Size = UDim2.new(0.3, -5, 1, 0)
+			priceLabel.Position = UDim2.new(0.7, 0, 0, 0)
+			priceLabel.BackgroundTransparency = 1
+			priceLabel.TextColor3 = Color3.fromRGB(200, 255, 200)
+			priceLabel.TextXAlignment = Enum.TextXAlignment.Right
+			priceLabel.Font = Enum.Font.SourceSans
+			priceLabel.TextScaled = true
 
 			local price = "???"
 			pcall(function()
-				price = tostring(t[v.Name].Config.Price.Value)
+				price = tostring(towersFolder[tower.Name].Config.Price.Value)
 			end)
 
-			pr.Text = "$" .. price
+			priceLabel.Text = "$" .. price
 
-			nb.MouseButton1Click:Connect(function()
-				sel = v.Name
-				b.Text = "Selected: " .. v.Name
-				d.Visible = false
+			nameBtn.MouseButton1Click:Connect(function()
+				selectedTower = tower.Name
+				selectButton.Text = "Selected: " .. tower.Name
+				dropdownFrame.Visible = false
 			end)
 		end
 	end
-	drop.CanvasSize = UDim2.new(0, 0, 0, 27 * ct)
+
+	dropdown.CanvasSize = UDim2.new(0, 0, 0, 27 * count)
 end
 
-sbox:GetPropertyChangedSignal("Text"):Connect(function()
-	refresh(sbox.Text)
+-- Search bar update
+searchBox:GetPropertyChangedSignal("Text"):Connect(function()
+	refreshDropdown(searchBox.Text)
 end)
 
-b.MouseButton1Click:Connect(function()
-	d.Visible = not d.Visible
-	if d.Visible then
-		sbox.Text = ""
-		refresh("")
+-- Toggle dropdown
+selectButton.MouseButton1Click:Connect(function()
+	dropdownFrame.Visible = not dropdownFrame.Visible
+	if dropdownFrame.Visible then
+		searchBox.Text = ""
+		refreshDropdown("")
 	end
 end)
 
-sb.MouseButton1Click:Connect(function()
-	if sel then
-		if #pts > 0 then
-			local pt = pts[math.random(1, #pts)]
-			local args = { sel, CFrame.new(pt.Position) }
-			s:InvokeServer(unpack(args))
+-- Spawn tower
+spawnButton.MouseButton1Click:Connect(function()
+	if selectedTower then
+		local char = plr.Character
+		if char and char:FindFirstChild("Left Leg") then
+			local args = {
+				selectedTower,
+				CFrame.new(char.Left Leg.Position)
+			}
+			spawnFunc:InvokeServer(unpack(args))
 		end
 	else
-		b.Text = "❗ Select a tower first"
+		selectButton.Text = "❗ Select a tower first"
 	end
 end)
